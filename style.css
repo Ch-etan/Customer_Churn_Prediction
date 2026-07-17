@@ -1,0 +1,399 @@
+/* ===============================
+   GOOGLE FONT
+==================================*/
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+html, body, [class*="css"]{
+    font-family: 'Poppins', sans-serif;
+}
+
+/* ===============================
+   MAIN BACKGROUND
+==================================*/
+
+.stApp{
+
+background: linear-gradient(
+135deg,
+#030712,
+#071A52,
+#0B2447,
+#19376D,
+#0F3460);
+
+background-size:400% 400%;
+
+animation:gradientBG 15s ease infinite;
+
+color:white;
+
+}
+
+/* Animated Background */
+
+@keyframes gradientBG{
+
+0%{
+background-position:0% 50%;
+}
+
+50%{
+background-position:100% 50%;
+}
+
+100%{
+background-position:0% 50%;
+}
+
+}
+
+/* ===============================
+   HIDE STREAMLIT
+==================================*/
+
+#MainMenu{
+
+visibility:hidden;
+
+}
+
+footer{
+
+visibility:hidden;
+
+}
+
+header{
+
+visibility:hidden;
+
+}
+
+/* ===============================
+   TITLE
+==================================*/
+
+.main-title{
+
+font-size:52px;
+
+font-weight:800;
+
+text-align:center;
+
+color:white;
+
+margin-top:20px;
+
+margin-bottom:5px;
+
+text-shadow:0px 0px 30px cyan;
+
+}
+
+.sub-title{
+
+text-align:center;
+
+font-size:20px;
+
+color:#B8E8FC;
+
+margin-bottom:40px;
+
+}
+
+/* ===============================
+   GLASS CARD
+==================================*/
+
+.glass{
+
+background:rgba(255,255,255,0.08);
+
+border-radius:25px;
+
+padding:25px;
+
+backdrop-filter:blur(18px);
+
+border:1px solid rgba(255,255,255,0.12);
+
+box-shadow:0 8px 32px rgba(0,0,0,0.4);
+
+transition:0.4s;
+
+margin-bottom:25px;
+
+}
+
+.glass:hover{
+
+transform:translateY(-8px);
+
+box-shadow:0 20px 40px rgba(0,255,255,.25);
+
+}
+
+/* ===============================
+   KPI CARDS
+==================================*/
+
+.kpi{
+
+background:rgba(255,255,255,.08);
+
+padding:25px;
+
+border-radius:25px;
+
+text-align:center;
+
+transition:.4s;
+
+box-shadow:0 10px 25px rgba(0,0,0,.35);
+
+}
+
+.kpi:hover{
+
+transform:scale(1.05);
+
+}
+
+.kpi h2{
+
+font-size:40px;
+
+color:#00E5FF;
+
+margin:0;
+
+}
+
+.kpi h4{
+
+color:white;
+
+margin-top:12px;
+
+}
+
+/* ===============================
+   BUTTON
+==================================*/
+
+.stButton>button{
+
+width:100%;
+
+background:linear-gradient(
+90deg,
+#00E5FF,
+#0066FF);
+
+color:white;
+
+font-size:22px;
+
+font-weight:bold;
+
+padding:14px;
+
+border:none;
+
+border-radius:15px;
+
+transition:.4s;
+
+}
+
+.stButton>button:hover{
+
+transform:scale(1.03);
+
+background:linear-gradient(
+90deg,
+#00B4DB,
+#0083B0);
+
+}
+
+/* ===============================
+   INPUT BOX
+==================================*/
+
+.stSelectbox div{
+
+color:white;
+
+}
+
+.stNumberInput input{
+
+background:rgba(255,255,255,.1);
+
+color:white;
+
+}
+
+.stSlider{
+
+color:white;
+
+}
+
+/* ===============================
+   SUCCESS BOX
+==================================*/
+
+.success{
+
+background:#00C853;
+
+padding:20px;
+
+border-radius:15px;
+
+color:white;
+
+font-size:25px;
+
+font-weight:bold;
+
+text-align:center;
+
+}
+
+/* ===============================
+   ERROR BOX
+==================================*/
+
+.error{
+
+background:#D50000;
+
+padding:20px;
+
+border-radius:15px;
+
+color:white;
+
+font-size:25px;
+
+font-weight:bold;
+
+text-align:center;
+
+}
+
+/* ===============================
+   PROBABILITY CARD
+==================================*/
+
+.prob{
+
+background:rgba(255,255,255,.08);
+
+padding:25px;
+
+border-radius:20px;
+
+text-align:center;
+
+margin-top:20px;
+
+}
+
+.prob h1{
+
+font-size:60px;
+
+color:#00E5FF;
+
+}
+
+/* ===============================
+   SIDEBAR
+==================================*/
+
+[data-testid="stSidebar"]{
+
+background:#071A52;
+
+}
+
+[data-testid="stSidebar"] h1{
+
+color:white;
+
+}
+
+[data-testid="stSidebar"]{
+
+border-right:2px solid rgba(255,255,255,.1);
+
+}
+
+/* ===============================
+   METRIC
+==================================*/
+
+[data-testid="metric-container"]{
+
+background:rgba(255,255,255,.08);
+
+padding:15px;
+
+border-radius:15px;
+
+box-shadow:0 8px 20px rgba(0,0,0,.4);
+
+}
+
+/* ===============================
+   TABLE
+==================================*/
+
+table{
+
+border-radius:15px;
+
+overflow:hidden;
+
+}
+
+/* ===============================
+   HR
+==================================*/
+
+hr{
+
+border:1px solid rgba(255,255,255,.15);
+
+}
+
+/* ===============================
+   SCROLLBAR
+==================================*/
+
+::-webkit-scrollbar{
+
+width:10px;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+background:#00E5FF;
+
+border-radius:10px;
+
+}
+
+::-webkit-scrollbar-track{
+
+background:#071A52;
+
+}
