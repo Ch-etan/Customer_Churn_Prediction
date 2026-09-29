@@ -1,33 +1,61 @@
-# Customer Churn Prediction
+# 📊 Customer Churn Prediction
 
-## Overview
+A machine learning based Customer Churn Prediction system built using Python and Streamlit.
 
-Customer Churn Prediction System built using Machine Learning and Streamlit.
+## 🚀 Project Objective
 
-## Features
+The goal of this project is to predict whether a telecom customer is likely to leave the service.
 
-- Customer Churn Prediction
-- Interactive Dashboard
-- Plotly Charts
+The system analyzes customer demographics, services, contract information and billing details.
+
+## ✨ Features
+
+- Exploratory Data Analysis
+- Customer churn analysis
 - Logistic Regression
 - Random Forest
-- Beautiful UI
-- Business Recommendations
+- XGBoost
+- Accuracy evaluation
+- Precision evaluation
+- Recall evaluation
+- F1 Score
+- ROC-AUC
+- Interactive Streamlit dashboard
+- Churn probability prediction
+- Risk classification
+- Business recommendations
 
-## Tech Stack
+## 🛠️ Technologies
 
 - Python
-- Streamlit
 - Pandas
-- Plotly
+- NumPy
 - Scikit-learn
+- XGBoost
+- Streamlit
+- Plotly
 - Joblib
 
-## Dataset
+## 📂 Dataset
 
-Telco Customer Churn Dataset
+Telco Customer Churn Dataset.
 
-## Run
+The dataset contains customer demographic, service and billing information.
 
-```bash
-streamlit run app.py
+## 📁 Project Structure
+
+```text
+Customer_Churn_Prediction/
+│
+├── app.py
+├── train_model.py
+├── preprocess.py
+├── utils.py
+├── style.css
+├── requirements.txt
+├── README.md
+├── .gitignore
+│
+├── data/
+├── models/
+└── images/

@@ -1,96 +1,70 @@
-# ==========================================
-# Customer Churn Prediction
-# Data Preprocessing
-# ==========================================
-
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-# ------------------------------------------
-# Load Dataset
-# ------------------------------------------
-df = pd.read_csv("data/WA_Fn-UseC_-Telco-Customer-Churn.csv")
 
-print("=" * 50)
-print("Dataset Loaded Successfully!")
-print("=" * 50)
+DATA_PATH = "data/WA_Fn-UseC_-Telco-Customer-Churn.csv"
 
-print("\nOriginal Dataset Shape:")
-print(df.shape)
 
-# ------------------------------------------
-# Convert TotalCharges to Numeric
-# ------------------------------------------
-df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
+def load_data():
+    df = pd.read_csv(DATA_PATH)
 
-# ------------------------------------------
-# Remove Missing Values
-# ------------------------------------------
-df.dropna(inplace=True)
+    # Convert TotalCharges to numeric
+    df["TotalCharges"] = pd.to_numeric(
+        df["TotalCharges"],
+        errors="coerce"
+    )
 
-print("\nDataset Shape After Removing Missing Values:")
-print(df.shape)
+    # Remove rows containing missing values
+    df.dropna(inplace=True)
 
-# ------------------------------------------
-# Remove CustomerID
-# ------------------------------------------
-df.drop("customerID", axis=1, inplace=True)
+    # Remove customer ID because it is not useful for prediction
+    df.drop("customerID", axis=1, inplace=True)
 
-# ------------------------------------------
-# Convert Target Variable
-# ------------------------------------------
-df["Churn"] = df["Churn"].map({"Yes": 1, "No": 0})
+    return df
 
-# ------------------------------------------
-# One-Hot Encoding
-# ------------------------------------------
-df = pd.get_dummies(df, drop_first=True)
 
-# ------------------------------------------
-# Convert Boolean Columns to Integer
-# ------------------------------------------
-bool_columns = df.select_dtypes(include=["bool"]).columns
-df[bool_columns] = df[bool_columns].astype(int)
+def prepare_data(df):
 
-print("\nDataset Shape After Encoding:")
-print(df.shape)
+    # Convert target variable
+    df["Churn"] = df["Churn"].map({
+        "Yes": 1,
+        "No": 0
+    })
 
-print("\nFirst 5 Rows:")
-print(df.head())
+    X = df.drop("Churn", axis=1)
+    y = df["Churn"]
 
-print("\nData Types:")
-print(df.dtypes)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X,
+        y,
+        test_size=0.20,
+        random_state=42,
+        stratify=y
+    )
 
-# ------------------------------------------
-# Separate Features and Target
-# ------------------------------------------
-X = df.drop("Churn", axis=1)
-y = df["Churn"]
+    return X_train, X_test, y_train, y_test
 
-print("\nFeature Matrix Shape:")
-print(X.shape)
 
-print("\nTarget Vector Shape:")
-print(y.shape)
+if __name__ == "__main__":
 
-# ------------------------------------------
-# Train-Test Split
-# ------------------------------------------
-X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
-    test_size=0.20,
-    random_state=42,
-    stratify=y
-)
+    df = load_data()
 
-print("\n" + "=" * 50)
-print("Train-Test Split Completed")
-print("=" * 50)
+    print("=" * 60)
+    print("DATASET INFORMATION")
+    print("=" * 60)
 
-print("\nTraining Features :", X_train.shape)
-print("Testing Features  :", X_test.shape)
-print("Training Labels   :", y_train.shape)
-print("Testing Labels    :", y_test.shape)
+    print("Shape:", df.shape)
 
-print("\nPreprocessing Completed Successfully!")
+    print("\nColumns:")
+    print(df.columns.tolist())
+
+    print("\nMissing Values:")
+    print(df.isnull().sum())
+
+    print("\nChurn Distribution:")
+    print(df["Churn"].value_counts())
+
+    print("\nChurn Percentage:")
+    print(df["Churn"].value_counts(normalize=True) * 100)
+
+    print("\nPreprocessing completed successfully!")

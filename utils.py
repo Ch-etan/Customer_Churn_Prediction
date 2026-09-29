@@ -1,17 +1,14 @@
 import joblib
 import pandas as pd
 
-# ---------------------------------------------------
-# Load Model
-# ---------------------------------------------------
 
-model = joblib.load("models/churn_model.pkl")
-feature_names = joblib.load("models/feature_names.pkl")
+MODEL_PATH = "models/churn_model.pkl"
 
 
-# ---------------------------------------------------
-# Create Input Data
-# ---------------------------------------------------
+def load_model():
+
+    return joblib.load(MODEL_PATH)
+
 
 def create_input(
     gender,
@@ -29,223 +26,103 @@ def create_input(
     streaming_tv,
     streaming_movies,
     contract,
-    paperless_billing,
-    payment_method,
-    monthly_charges,
-    total_charges
+    paperless,
+    payment,
+    monthly,
+    total
 ):
 
-    df = pd.DataFrame(columns=feature_names)
+    data = {
 
-    df.loc[0] = 0
+        "gender": gender,
 
-    # Numerical Features
+        "SeniorCitizen": senior,
 
-    df["SeniorCitizen"] = senior
-    df["tenure"] = tenure
-    df["MonthlyCharges"] = monthly_charges
-    df["TotalCharges"] = total_charges
+        "Partner": partner,
 
-    # Binary Features
+        "Dependents": dependents,
 
-    if "gender_Male" in df.columns:
-        df["gender_Male"] = 1 if gender == "Male" else 0
+        "tenure": tenure,
 
-    if "Partner_Yes" in df.columns:
-        df["Partner_Yes"] = 1 if partner == "Yes" else 0
+        "PhoneService": phone_service,
 
-    if "Dependents_Yes" in df.columns:
-        df["Dependents_Yes"] = 1 if dependents == "Yes" else 0
+        "MultipleLines": multiple_lines,
 
-    if "PhoneService_Yes" in df.columns:
-        df["PhoneService_Yes"] = 1 if phone_service == "Yes" else 0
+        "InternetService": internet_service,
 
-    if "MultipleLines_Yes" in df.columns:
-        df["MultipleLines_Yes"] = 1 if multiple_lines == "Yes" else 0
+        "OnlineSecurity": online_security,
 
-    if "MultipleLines_No phone service" in df.columns:
-        df["MultipleLines_No phone service"] = (
-            1 if multiple_lines == "No phone service" else 0
-        )
+        "OnlineBackup": online_backup,
 
-    # Internet
+        "DeviceProtection": device_protection,
 
-    if "InternetService_Fiber optic" in df.columns:
-        df["InternetService_Fiber optic"] = (
-            1 if internet_service == "Fiber optic" else 0
-        )
+        "TechSupport": tech_support,
 
-    if "InternetService_No" in df.columns:
-        df["InternetService_No"] = (
-            1 if internet_service == "No" else 0
-        )
+        "StreamingTV": streaming_tv,
 
-    # Online Security
+        "StreamingMovies": streaming_movies,
 
-    if "OnlineSecurity_Yes" in df.columns:
-        df["OnlineSecurity_Yes"] = (
-            1 if online_security == "Yes" else 0
-        )
+        "Contract": contract,
 
-    if "OnlineSecurity_No internet service" in df.columns:
-        df["OnlineSecurity_No internet service"] = (
-            1 if online_security == "No internet service" else 0
-        )
+        "PaperlessBilling": paperless,
 
-    # Online Backup
+        "PaymentMethod": payment,
 
-    if "OnlineBackup_Yes" in df.columns:
-        df["OnlineBackup_Yes"] = (
-            1 if online_backup == "Yes" else 0
-        )
+        "MonthlyCharges": monthly,
 
-    if "OnlineBackup_No internet service" in df.columns:
-        df["OnlineBackup_No internet service"] = (
-            1 if online_backup == "No internet service" else 0
-        )
+        "TotalCharges": total
+    }
 
-    # Device Protection
-
-    if "DeviceProtection_Yes" in df.columns:
-        df["DeviceProtection_Yes"] = (
-            1 if device_protection == "Yes" else 0
-        )
-
-    if "DeviceProtection_No internet service" in df.columns:
-        df["DeviceProtection_No internet service"] = (
-            1 if device_protection == "No internet service" else 0
-        )
-
-    # Tech Support
-
-    if "TechSupport_Yes" in df.columns:
-        df["TechSupport_Yes"] = (
-            1 if tech_support == "Yes" else 0
-        )
-
-    if "TechSupport_No internet service" in df.columns:
-        df["TechSupport_No internet service"] = (
-            1 if tech_support == "No internet service" else 0
-        )
-
-    # Streaming TV
-
-    if "StreamingTV_Yes" in df.columns:
-        df["StreamingTV_Yes"] = (
-            1 if streaming_tv == "Yes" else 0
-        )
-
-    if "StreamingTV_No internet service" in df.columns:
-        df["StreamingTV_No internet service"] = (
-            1 if streaming_tv == "No internet service" else 0
-        )
-
-    # Streaming Movies
-
-    if "StreamingMovies_Yes" in df.columns:
-        df["StreamingMovies_Yes"] = (
-            1 if streaming_movies == "Yes" else 0
-        )
-
-    if "StreamingMovies_No internet service" in df.columns:
-        df["StreamingMovies_No internet service"] = (
-            1 if streaming_movies == "No internet service" else 0
-        )
-
-    # Contract
-
-    if "Contract_One year" in df.columns:
-        df["Contract_One year"] = (
-            1 if contract == "One year" else 0
-        )
-
-    if "Contract_Two year" in df.columns:
-        df["Contract_Two year"] = (
-            1 if contract == "Two year" else 0
-        )
-
-    # Paperless Billing
-
-    if "PaperlessBilling_Yes" in df.columns:
-        df["PaperlessBilling_Yes"] = (
-            1 if paperless_billing == "Yes" else 0
-        )
-
-    # Payment Method
-
-    methods = [
-        "Credit card (automatic)",
-        "Electronic check",
-        "Mailed check"
-    ]
-
-    for method in methods:
-
-        column = f"PaymentMethod_{method}"
-
-        if column in df.columns:
-
-            df[column] = 1 if payment_method == method else 0
-
-    return df
+    return pd.DataFrame([data])
 
 
-# ---------------------------------------------------
-# Prediction
-# ---------------------------------------------------
+def predict(input_df):
 
-def predict(df):
+    model = load_model()
 
-    prediction = model.predict(df)[0]
+    prediction = int(
+        model.predict(input_df)[0]
+    )
 
-    probability = model.predict_proba(df)[0][1]
+    probability = float(
+        model.predict_proba(input_df)[0][1]
+    )
 
     return prediction, probability
 
 
-# ---------------------------------------------------
-# Risk Level
-# ---------------------------------------------------
-
 def risk_level(probability):
 
     if probability < 0.30:
-        return "🟢 Low Risk"
+        return "LOW"
 
     elif probability < 0.70:
-        return "🟡 Medium Risk"
+        return "MEDIUM"
 
-    else:
-        return "🔴 High Risk"
+    return "HIGH"
 
-
-# ---------------------------------------------------
-# Recommendation
-# ---------------------------------------------------
 
 def recommendation(probability):
 
     if probability < 0.30:
 
         return [
-            "Customer is loyal.",
-            "Continue regular engagement.",
-            "Offer loyalty rewards."
+            "Maintain regular customer communication.",
+            "Offer loyalty rewards.",
+            "Consider premium service recommendations."
         ]
 
     elif probability < 0.70:
 
         return [
-            "Send promotional offers.",
-            "Contact customer support.",
-            "Provide personalized discounts."
+            "Send personalized promotional offers.",
+            "Improve customer engagement.",
+            "Consider retention discounts."
         ]
 
-    else:
-
-        return [
-            "Immediate retention campaign.",
-            "Offer contract upgrade.",
-            "Assign customer success manager.",
-            "Provide premium support."
-        ]
+    return [
+        "Contact the customer immediately.",
+        "Offer a retention discount.",
+        "Consider contract upgrade options.",
+        "Assign a customer retention specialist."
+    ]

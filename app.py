@@ -1,223 +1,348 @@
-# ============================================================
-# Customer Churn Prediction Dashboard
-# Part 1
-# ============================================================
+import json
+import os
 
-import streamlit as st
+import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
-import pandas as pd
-from utils import create_input, predict, risk_level, recommendation
+import streamlit as st
 
-# ------------------------------------------------------------
-# Page Configuration
-# ------------------------------------------------------------
-
-st.set_page_config(
-    page_title="Customer Churn Prediction",
-    page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="expanded"
+from utils import (
+    create_input,
+    predict,
+    risk_level,
+    recommendation
 )
 
-# ------------------------------------------------------------
-# Load CSS
-# ------------------------------------------------------------
 
-def load_css():
-    with open("style.css") as f:
+# ============================================================
+# PAGE CONFIG
+# ============================================================
+
+st.set_page_config(
+    page_title="Customer Churn AI",
+    page_icon="📊",
+    layout="wide"
+)
+
+
+# ============================================================
+# CSS
+# ============================================================
+
+if os.path.exists("style.css"):
+
+    with open("style.css", "r") as file:
         st.markdown(
-            f"<style>{f.read()}</style>",
+            f"<style>{file.read()}</style>",
             unsafe_allow_html=True
         )
 
-load_css()
 
-# ------------------------------------------------------------
-# Header
-# ------------------------------------------------------------
+# ============================================================
+# LOAD DATA
+# ============================================================
 
-st.markdown("""
-<div class="main-title">
-📊 Customer Churn Prediction
-</div>
-<div class="sub-title">
-AI Powered Customer Retention System
-</div>
-""", unsafe_allow_html=True)
+DATA_PATH = (
+    "data/WA_Fn-UseC_-Telco-Customer-Churn.csv"
+)
+
+METRICS_PATH = "models/metrics.json"
+
+
+@st.cache_data
+def load_dataset():
+
+    df = pd.read_csv(DATA_PATH)
+
+    df["TotalCharges"] = pd.to_numeric(
+        df["TotalCharges"],
+        errors="coerce"
+    )
+
+    return df
+
+
+@st.cache_data
+def load_metrics():
+
+    with open(METRICS_PATH, "r") as file:
+        return json.load(file)
+
+
+df = load_dataset()
+metrics = load_metrics()
+
+
+# ============================================================
+# HEADER
+# ============================================================
+
+st.markdown(
+    """
+    <div class="main-title">
+        📊 Customer Churn Prediction
+    </div>
+
+    <div class="sub-title">
+        AI-Powered Customer Retention Analytics Dashboard
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 
 st.markdown("---")
 
-# ------------------------------------------------------------
-# KPI Cards
-# ------------------------------------------------------------
+
+# ============================================================
+# KPI CARDS
+# ============================================================
+
+total_customers = len(df)
+
+churned = (
+    df["Churn"]
+    .value_counts()
+    .get("Yes", 0)
+)
+
+churn_rate = (
+    churned / total_customers * 100
+)
+
+
+best_model = metrics["best_model"]
+
+best_accuracy = (
+    metrics["results"]
+    [best_model]
+    ["accuracy"] * 100
+)
+
 
 k1, k2, k3, k4 = st.columns(4)
 
+
 with k1:
+
     st.metric(
-        label="👥 Customers",
-        value="7043"
+        "👥 Total Customers",
+        f"{total_customers:,}"
     )
+
 
 with k2:
+
     st.metric(
-        label="🎯 Accuracy",
-        value="80.31%"
+        "⚠ Churn Rate",
+        f"{churn_rate:.2f}%"
     )
+
 
 with k3:
+
     st.metric(
-        label="⚠ Churn Rate",
-        value="26.54%"
+        "🎯 Accuracy",
+        f"{best_accuracy:.2f}%"
     )
+
 
 with k4:
+
     st.metric(
-        label="🤖 Best Model",
-        value="Logistic Regression"
+        "🤖 Best Model",
+        best_model
     )
 
-st.markdown("<br>", unsafe_allow_html=True)
 
-# ------------------------------------------------------------
-# Dashboard Charts
-# ------------------------------------------------------------
+# ============================================================
+# ANALYTICS
+# ============================================================
 
-left_chart, right_chart = st.columns(2)
+st.markdown("---")
 
-with left_chart:
+st.header("📈 Customer Analytics")
 
-    st.subheader("🥧 Customer Distribution")
 
-    pie = go.Figure(
+chart1, chart2 = st.columns(2)
+
+
+with chart1:
+
+    churn_counts = (
+        df["Churn"]
+        .value_counts()
+        .rename(
+            index={
+                "No": "Retained",
+                "Yes": "Churned"
+            }
+        )
+    )
+
+    fig = go.Figure(
         data=[
             go.Pie(
-                labels=["Retained","Churn"],
-                values=[5174,1869],
-                hole=0.55,
-                marker=dict(
-                    colors=[
-                        "#00E676",
-                        "#FF5252"
-                    ]
-                )
+                labels=churn_counts.index,
+                values=churn_counts.values,
+                hole=0.55
             )
         ]
     )
 
-    pie.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)",
-        font_color="white",
-        height=420
+    fig.update_layout(
+        title="Customer Churn Distribution",
+        height=400
     )
 
     st.plotly_chart(
-        pie,
+        fig,
         use_container_width=True
     )
 
-with right_chart:
 
-    st.subheader("📈 Model Comparison")
+with chart2:
 
-    models = [
-        "Logistic Regression",
-        "Random Forest"
-    ]
-
-    accuracy = [
-        80.31,
-        78.96
-    ]
-
-    bar = go.Figure()
-
-    bar.add_trace(
-
-        go.Bar(
-
-            x=models,
-
-            y=accuracy,
-
-            text=accuracy,
-
-            textposition="outside",
-
-            marker_color=[
-                "#00E5FF",
-                "#7C4DFF"
-            ]
-
-        )
-
+    model_names = list(
+        metrics["results"].keys()
     )
 
-    bar.update_layout(
+    model_accuracy = [
+        metrics["results"][name]["accuracy"] * 100
+        for name in model_names
+    ]
 
-        yaxis_title="Accuracy",
+    fig = px.bar(
+        x=model_names,
+        y=model_accuracy,
+        text=[
+            f"{value:.2f}%"
+            for value in model_accuracy
+        ],
+        labels={
+            "x": "Model",
+            "y": "Accuracy (%)"
+        },
+        title="Model Accuracy Comparison"
+    )
 
-        paper_bgcolor="rgba(0,0,0,0)",
+    fig.update_traces(
+        textposition="outside"
+    )
 
-        plot_bgcolor="rgba(0,0,0,0)",
-
-        font_color="white",
-
-        height=420
-
+    fig.update_layout(
+        height=400
     )
 
     st.plotly_chart(
-        bar,
+        fig,
         use_container_width=True
     )
+
+
+# ============================================================
+# MODEL PERFORMANCE
+# ============================================================
 
 st.markdown("---")
 
-st.header("👤 Customer Information")
+st.header("🤖 Model Performance")
+
+
+performance_rows = []
+
+for name, values in metrics["results"].items():
+
+    performance_rows.append({
+
+        "Model": name,
+
+        "Accuracy":
+            f"{values['accuracy'] * 100:.2f}%",
+
+        "Precision":
+            f"{values['precision'] * 100:.2f}%",
+
+        "Recall":
+            f"{values['recall'] * 100:.2f}%",
+
+        "F1 Score":
+            f"{values['f1_score'] * 100:.2f}%",
+
+        "ROC-AUC":
+            f"{values['roc_auc']:.4f}"
+    })
+
+
+performance_df = pd.DataFrame(
+    performance_rows
+)
+
+
+st.dataframe(
+    performance_df,
+    use_container_width=True,
+    hide_index=True
+)
+
+
+# ============================================================
+# PREDICTION SECTION
+# ============================================================
+
+st.markdown("---")
+
+st.header("🔮 Predict Customer Churn")
+
+st.write(
+    "Enter customer information to estimate "
+    "the probability of churn."
+)
+
 
 left, right = st.columns(2)
+
+
 # ============================================================
-# Customer Input Form
+# LEFT INPUTS
 # ============================================================
 
 with left:
 
     gender = st.selectbox(
-        "👤 Gender",
+        "Gender",
         ["Male", "Female"]
     )
 
     senior = st.selectbox(
-        "🧓 Senior Citizen",
+        "Senior Citizen",
         [0, 1]
     )
 
     partner = st.selectbox(
-        "❤️ Partner",
+        "Partner",
         ["Yes", "No"]
     )
 
     dependents = st.selectbox(
-        "👨‍👩‍👧 Dependents",
+        "Dependents",
         ["Yes", "No"]
     )
 
     tenure = st.slider(
-        "📅 Tenure (Months)",
+        "Tenure (Months)",
         0,
         72,
         24
     )
 
     phone_service = st.selectbox(
-        "☎ Phone Service",
+        "Phone Service",
         ["Yes", "No"]
     )
 
     multiple_lines = st.selectbox(
-        "📞 Multiple Lines",
+        "Multiple Lines",
         [
             "Yes",
             "No",
@@ -226,7 +351,7 @@ with left:
     )
 
     internet_service = st.selectbox(
-        "🌐 Internet Service",
+        "Internet Service",
         [
             "DSL",
             "Fiber optic",
@@ -235,7 +360,7 @@ with left:
     )
 
     online_security = st.selectbox(
-        "🔒 Online Security",
+        "Online Security",
         [
             "Yes",
             "No",
@@ -243,10 +368,15 @@ with left:
         ]
     )
 
+
+# ============================================================
+# RIGHT INPUTS
+# ============================================================
+
 with right:
 
     online_backup = st.selectbox(
-        "💾 Online Backup",
+        "Online Backup",
         [
             "Yes",
             "No",
@@ -255,7 +385,7 @@ with right:
     )
 
     device_protection = st.selectbox(
-        "🛡 Device Protection",
+        "Device Protection",
         [
             "Yes",
             "No",
@@ -264,7 +394,7 @@ with right:
     )
 
     tech_support = st.selectbox(
-        "🛠 Tech Support",
+        "Tech Support",
         [
             "Yes",
             "No",
@@ -273,7 +403,7 @@ with right:
     )
 
     streaming_tv = st.selectbox(
-        "📺 Streaming TV",
+        "Streaming TV",
         [
             "Yes",
             "No",
@@ -282,7 +412,7 @@ with right:
     )
 
     streaming_movies = st.selectbox(
-        "🎬 Streaming Movies",
+        "Streaming Movies",
         [
             "Yes",
             "No",
@@ -291,7 +421,7 @@ with right:
     )
 
     contract = st.selectbox(
-        "📝 Contract",
+        "Contract",
         [
             "Month-to-month",
             "One year",
@@ -300,59 +430,58 @@ with right:
     )
 
     paperless = st.selectbox(
-        "📄 Paperless Billing",
-        [
-            "Yes",
-            "No"
-        ]
+        "Paperless Billing",
+        ["Yes", "No"]
     )
 
     payment = st.selectbox(
-        "💳 Payment Method",
+        "Payment Method",
         [
-            "Bank transfer (automatic)",
-            "Credit card (automatic)",
             "Electronic check",
-            "Mailed check"
+            "Mailed check",
+            "Bank transfer (automatic)",
+            "Credit card (automatic)"
         ]
     )
 
-st.markdown("---")
 
-c1, c2 = st.columns(2)
+charge1, charge2 = st.columns(2)
 
-with c1:
 
-    monthly = st.slider(
-        "💰 Monthly Charges",
-        0.0,
-        150.0,
-        70.0
+with charge1:
+
+    monthly = st.number_input(
+        "Monthly Charges",
+        min_value=0.0,
+        max_value=200.0,
+        value=70.0
     )
 
-with c2:
 
-    total = st.slider(
-        "💵 Total Charges",
-        0.0,
-        9000.0,
-        2000.0
+with charge2:
+
+    total = st.number_input(
+        "Total Charges",
+        min_value=0.0,
+        max_value=10000.0,
+        value=2000.0
     )
 
-st.markdown("<br>", unsafe_allow_html=True)
 
-predict_btn = st.button(
-    "🚀 Predict Customer Churn"
+predict_button = st.button(
+    "🚀 Predict Churn",
+    use_container_width=True
 )
 
-st.markdown("---")
+
 # ============================================================
-# Prediction
+# PREDICTION
 # ============================================================
 
-if predict_btn:
+if predict_button:
 
     input_df = create_input(
+
         gender,
         senior,
         partner,
@@ -374,99 +503,123 @@ if predict_btn:
         total
     )
 
-    prediction, probability = predict(input_df)
+    prediction, probability = predict(
+        input_df
+    )
 
-    st.header("📊 Prediction Result")
+    risk = risk_level(
+        probability
+    )
 
-    result1, result2 = st.columns([1, 1.2])
+    st.markdown("---")
+
+    st.header("🎯 Prediction Result")
+
+
+    result1, result2 = st.columns(2)
+
 
     # --------------------------------------------------------
-    # Left Side
+    # RESULT
     # --------------------------------------------------------
 
     with result1:
 
         if prediction == 1:
 
-            st.error("⚠ Customer is likely to Churn")
+            st.error(
+                "⚠ High Probability of Churn"
+            )
 
         else:
 
-            st.success("✅ Customer is NOT likely to Churn")
+            st.success(
+                "✅ Customer Likely to Stay"
+            )
+
 
         st.metric(
             "Churn Probability",
-            f"{probability*100:.2f}%"
+            f"{probability * 100:.2f}%"
         )
 
-        st.metric(
-            "Risk Level",
-            risk_level(probability)
+
+        if risk == "LOW":
+
+            st.success(
+                f"Risk Level: {risk}"
+            )
+
+        elif risk == "MEDIUM":
+
+            st.warning(
+                f"Risk Level: {risk}"
+            )
+
+        else:
+
+            st.error(
+                f"Risk Level: {risk}"
+            )
+
+
+        st.progress(
+            min(
+                max(probability, 0.0),
+                1.0
+            )
         )
 
-        st.progress(float(probability))
 
     # --------------------------------------------------------
-    # Right Side
+    # GAUGE
     # --------------------------------------------------------
 
     with result2:
 
         gauge = go.Figure(
-
             go.Indicator(
 
                 mode="gauge+number",
 
-                value=probability*100,
+                value=probability * 100,
 
                 title={
-                    "text":"Prediction Confidence"
+                    "text":
+                    "Churn Probability (%)"
                 },
 
                 gauge={
 
-                    "axis":{
-                        "range":[0,100]
+                    "axis": {
+                        "range": [0, 100]
                     },
 
-                    "bar":{
-                        "color":"deepskyblue"
-                    },
-
-                    "steps":[
+                    "steps": [
 
                         {
-                            "range":[0,30],
-                            "color":"green"
+                            "range": [0, 30],
+                            "color": "#16a34a"
                         },
 
                         {
-                            "range":[30,70],
-                            "color":"gold"
+                            "range": [30, 70],
+                            "color": "#eab308"
                         },
 
                         {
-                            "range":[70,100],
-                            "color":"red"
+                            "range": [70, 100],
+                            "color": "#dc2626"
                         }
 
                     ]
 
                 }
-
             )
-
         )
 
         gauge.update_layout(
-
-            paper_bgcolor="rgba(0,0,0,0)",
-
-            font_color="white",
-
             height=350
-
         )
 
         st.plotly_chart(
@@ -474,281 +627,171 @@ if predict_btn:
             use_container_width=True
         )
 
-    # --------------------------------------------------------
-    # Customer Summary
-    # --------------------------------------------------------
+
+    # ========================================================
+    # CUSTOMER SUMMARY
+    # ========================================================
 
     st.markdown("---")
 
     st.subheader("👤 Customer Summary")
 
+
     s1, s2, s3 = st.columns(3)
+
 
     with s1:
 
-        st.info(f"Gender : {gender}")
-        st.info(f"Partner : {partner}")
-        st.info(f"Dependents : {dependents}")
+        st.info(
+            f"Gender: {gender}"
+        )
+
+        st.info(
+            f"Partner: {partner}"
+        )
+
+        st.info(
+            f"Dependents: {dependents}"
+        )
+
 
     with s2:
 
-        st.info(f"Tenure : {tenure} Months")
-        st.info(f"Internet : {internet_service}")
-        st.info(f"Contract : {contract}")
+        st.info(
+            f"Tenure: {tenure} months"
+        )
+
+        st.info(
+            f"Internet: {internet_service}"
+        )
+
+        st.info(
+            f"Contract: {contract}"
+        )
+
 
     with s3:
 
-        st.info(f"Monthly Charges : ${monthly}")
-        st.info(f"Total Charges : ${total}")
-        st.info(f"Payment : {payment}")
+        st.info(
+            f"Monthly Charges: ${monthly:.2f}"
+        )
 
-    # --------------------------------------------------------
-    # Recommendation
-    # --------------------------------------------------------
+        st.info(
+            f"Total Charges: ${total:.2f}"
+        )
+
+        st.info(
+            f"Payment: {payment}"
+        )
+
+
+    # ========================================================
+    # RECOMMENDATIONS
+    # ========================================================
 
     st.markdown("---")
 
-    st.subheader("💡 AI Recommendation")
+    st.subheader(
+        "💡 Business Recommendations"
+    )
 
-    rec = recommendation(probability)
 
-    for item in rec:
+    recommendations = recommendation(
+        probability
+    )
 
-        st.success(item)
 
-    st.markdown("---")
+    for item in recommendations:
 
-    st.subheader("📈 Business Insight")
+        st.success(
+            "✓ " + item
+        )
 
-    if probability < 0.30:
 
-        st.success("""
-        Customer has a very low probability of churn.
-
-        Recommended Action:
-
-        • Maintain regular communication
-
-        • Offer loyalty rewards
-
-        • Upsell premium plans
-        """)
-
-    elif probability < 0.70:
-
-        st.warning("""
-        Customer has a medium risk of churn.
-
-        Recommended Action:
-
-        • Send promotional discounts
-
-        • Improve customer engagement
-
-        • Personalized offers
-        """)
-
-    else:
-
-        st.error("""
-        Customer has a HIGH probability of churn.
-
-        Recommended Action:
-
-        • Contact immediately
-
-        • Assign retention specialist
-
-        • Offer contract upgrade
-
-        • Provide special discounts
-        """)
-        # ============================================================
-# About Project
+# ============================================================
+# ABOUT
 # ============================================================
 
 st.markdown("---")
 
 st.header("📘 About This Project")
 
-left, right = st.columns([2,1])
 
-with left:
+about1, about2 = st.columns(2)
 
-    st.write("""
-### 📊 Customer Churn Prediction using Machine Learning
 
-This application predicts whether a telecom customer is likely to leave a company based on customer demographics, account information, and subscribed services.
+with about1:
 
-The objective is to help businesses identify high-risk customers and improve customer retention strategies.
+    st.write(
+        """
+        **Customer Churn Prediction** is a machine
+        learning application designed to identify
+        telecom customers who may discontinue their
+        services.
 
----
+        The project uses customer demographics,
+        account information, service subscriptions
+        and billing information to estimate churn
+        probability.
 
-### 🚀 Technologies Used
+        The system compares multiple classification
+        algorithms and provides business-oriented
+        retention recommendations.
+        """
+    )
 
-- 🐍 Python
-- 📊 Pandas
-- 🤖 Scikit-Learn
-- 📈 Plotly
-- 🌐 Streamlit
-- 💾 Joblib
 
----
+with about2:
 
-### 🤖 Machine Learning Models
+    st.info(
+        """
+        **Technology Stack**
 
-✔ Logistic Regression
+        🐍 Python
 
-✔ Random Forest
+        📊 Pandas
 
----
+        🤖 Scikit-learn
 
-### 📂 Dataset
+        🌲 Random Forest
 
-**Telco Customer Churn Dataset**
+        ⚡ XGBoost
 
-- Total Customers : **7043**
-- Features : **20+**
-- Target Variable : **Churn**
+        📈 Plotly
 
----
+        🌐 Streamlit
 
-### 📏 Model Evaluation
+        💾 Joblib
+        """
+    )
 
-✔ Accuracy
-
-✔ Precision
-
-✔ Recall
-
-✔ F1 Score
-
-✔ ROC-AUC
-
----
-
-### 🎯 Project Goal
-
-To build an intelligent decision support system that predicts customer churn and helps companies improve customer retention.
-
-""")
-
-with right:
-
-    st.metric("Dataset Size", "7043")
-
-    st.metric("Features", "30")
-
-    st.metric("Algorithms", "2")
-
-    st.metric("Accuracy", "80.31%")
-
-    st.metric("Best Model", "Logistic Regression")
 
 # ============================================================
-# Feature Importance (Illustration)
+# FOOTER
 # ============================================================
 
 st.markdown("---")
 
-st.subheader("📊 Important Features")
+st.markdown(
+    """
+    <div style="
+        text-align:center;
+        padding:25px;
+        border-radius:15px;
+        background:rgba(255,255,255,0.06);
+    ">
 
-feature_data = {
-    "Feature":[
-        "Monthly Charges",
-        "Tenure",
-        "Contract",
-        "Internet Service",
-        "Payment Method",
-        "Tech Support",
-        "Online Security"
-    ],
+    <h3>📊 Customer Churn Prediction</h3>
 
-    "Importance":[
-        0.95,
-        0.88,
-        0.80,
-        0.71,
-        0.63,
-        0.58,
-        0.52
-    ]
-}
+    <p>
+    Machine Learning & Data Analytics Project
+    </p>
 
-feature_df = pd.DataFrame(feature_data)
+    <p>
+    Developed by <b>Khemraj Bhagat</b>
+    </p>
 
-fig = px.bar(
-
-    feature_df,
-
-    x="Importance",
-
-    y="Feature",
-
-    orientation="h",
-
-    color="Importance",
-
-    color_continuous_scale="Blues"
-
+    </div>
+    """,
+    unsafe_allow_html=True
 )
-
-fig.update_layout(
-
-    paper_bgcolor="rgba(0,0,0,0)",
-
-    plot_bgcolor="rgba(0,0,0,0)",
-
-    font_color="white",
-
-    height=450,
-
-    yaxis_title="",
-
-    xaxis_title="Importance Score"
-
-)
-
-st.plotly_chart(
-    fig,
-    use_container_width=True
-)
-
-# ============================================================
-# Footer
-# ============================================================
-
-st.markdown("---")
-
-st.markdown("""
-
-<div style='text-align:center;
-padding:25px;
-background:rgba(255,255,255,0.08);
-border-radius:15px;'>
-
-<h2>🚀 Customer Churn Prediction Dashboard</h2>
-
-<p style='font-size:18px;'>
-
-Developed using ❤️ with
-
-<b>Python • Streamlit • Scikit-Learn • Plotly</b>
-
-</p>
-
-<p>
-
-Machine Learning Internship Project
-
-</p>
-
-<p>
-
-© 2026 All Rights Reserved
-
-</p>
-
-</div>
-
-""",unsafe_allow_html=True)
