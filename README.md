@@ -39,7 +39,6 @@ The system analyzes customer demographics, services, contract information and bi
 ## 📂 Dataset
 
 Telco Customer Churn Dataset.
-
 The dataset contains customer demographic, service and billing information.
 
 ## 📁 Project Structure
